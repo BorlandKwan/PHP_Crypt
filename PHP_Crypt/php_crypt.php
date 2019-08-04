@@ -10,7 +10,7 @@ PHP 7.3.6
 
 class PHP_Crypt{
 
-    const KEY = '(눈_눈)@1234'; /*  <---- need password !!!!   */
+    const KEY = 'Password(눈_눈)@1234'; /*  <---- need password !!!!   */
 
     public function  __construct(){
         if( empty(self::KEY) or is_null(self::KEY) ){ exit(' const KEY 값이 필요합니다.'); }
