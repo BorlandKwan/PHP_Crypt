@@ -18,10 +18,11 @@ class PHP_Crypt{
 
     public function encrypt($plaintext, $password = self::KEY) {
 
+        /* 값 체크 */
         if( empty($plaintext) or is_null($plaintext) ) { return false; }
         if( empty($password) or is_null($password) ) { return false; }
 
-        $plaintext = gzcompress($plaintext);
+        $plaintext = gzcompress($plaintext); //입력값을 압축 합니다.
         $password = hash('sha256', $password, true);
 
         $method = 'AES-256-CBC';
@@ -36,6 +37,7 @@ class PHP_Crypt{
     
     public function decrypt($ciphertext, $password = self::KEY) {
 
+        /* 값 체크 */
         if( empty($ciphertext) or is_null($ciphertext) ) { return false; }
         if( empty($password) or is_null($password) ) { return false; }
 
@@ -56,7 +58,7 @@ class PHP_Crypt{
         $plaintext = openssl_decrypt($ciphertext_row, $method, $password, OPENSSL_RAW_DATA, $iv);
         if ($plaintext === false) return false;
 
-        $plaintext = @gzuncompress($plaintext);
+        $plaintext = @gzuncompress($plaintext); //입력값을 압축을 해제합니다.
         if ($plaintext === false) return false;
        
         return $plaintext;
