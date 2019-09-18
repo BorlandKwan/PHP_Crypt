@@ -12,8 +12,8 @@ PHP에 mcrypt 모듈은 버전 PHP 7부터 보안성의 문재로 더 이상 지
 2. 비밀번호는 쉽게 설정하지 않도록 한다.
 */
 
-error_reporting(E_ALL);
-ini_set("display_errors", 1);
+// error_reporting(E_ALL);
+// ini_set("display_errors", 1);
 
 class PHP_Crypt
 {
