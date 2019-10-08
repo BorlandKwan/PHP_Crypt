@@ -22,22 +22,22 @@ class PHP_Crypt
     //기본 설정 부여
     const DEFAULT_HASH = 'sha256'; //사용할 기본 hash 값을 넣어준다. hash_algos() 에서 확인
     const DEFAULT_METHOD =  'aes-256-cbc'; //사용할 기본 openssl method 값을 넣어준다. openssl_get_cipher_methods() 에서 확인
-    const DEFAULT_PASSWORD = '|비밀번호||PASSWORD||秘密番號||パスワード|'; //기본 비밀번호 설정
+    const DEFAULT_PASSWORD = '<|비밀번호|PASSWORD|秘密番號|パスワード|पासवर्ड|Mật khẩu|>'; //기본 비밀번호 설정 (경우에 따라 변경)
     
     //시작 전  DEFAUL 초기값 확인 후 사용 하시기 바랍니다.
     public function __construct() 
     {
         if( $this->openssl_methods_check(self::DEFAULT_METHOD) === false ) { exit('"DEFAULT_METHOD" Value Error : "'.self::DEFAULT_METHOD.'" is not found or not supported'); }
         if( $this->hash_algo_check(self::DEFAULT_HASH) === false ) { exit('"DEFAULT_HASH" Value Error : "'.self::DEFAULT_HASH.'" is not found or not supported'); }
-        if( self::DEFAULT_PASSWORD == null ) { exit('"DEFAULT_PASSWORD" Value Error'); }
+        if( self::DEFAULT_PASSWORD == '' ) { exit('"DEFAULT_PASSWORD" Value Error'); }
     }
 
     //사용 가능한 openssl method 체크
     private function openssl_methods_check($method)
     {
-        if ( empty($method) ) { return (Bool) false; }
+        $method_list = @openssl_get_cipher_methods();
         if ( function_exists('openssl_encrypt') and function_exists('openssl_decrypt') ){
-            return (Bool) in_array($method, @openssl_get_cipher_methods());
+            return (Bool) in_array($method, $method_list);
         } else {
             return (Bool) false;
         }
@@ -46,9 +46,9 @@ class PHP_Crypt
     //사용 가능한 hash algo 체크
     private function hash_algo_check($hash_algo)
     {
-        if ( empty($hash_algo) ) { return (Bool) false; }
+        $hash_algo_list = @hash_algos();
         if ( function_exists('hash') ) {
-            return (Bool) in_array($hash_algo, @hash_algos());
+            return (Bool) in_array($hash_algo, $hash_algo_list);
         } else {
             return (Bool) false;
         }
@@ -85,17 +85,17 @@ class PHP_Crypt
     {
         //입력된 값이 사용 가능한 openssl method 체크
         $methods_check = $this->openssl_methods_check($method);
-        if( $methods_check === false ) { return false; }
+        if( $methods_check === false ) { $method = self::DEFAULT_METHOD; }
         unset($methods_check);
 
         //입력된 값이 사용 가능한 hash algo 체크
         $hash_check = $this->hash_algo_check($hash);
-        if( $hash_check === false ) { return false; }
+        if( $hash_check === false ) { $hash = self::DEFAULT_HASH; }
         unset($hash_check);
 
         //값 체크
         if ( empty($plain_text) ) { return false;  }
-        if ( empty($password) ) { return false;  }
+        if ( empty($password) ) { $password = self::DEFAULT_PASSWORD;  }
 
         //용량 절감을 위해 입력값을 압축한다.
         $plain_text = $this->data_compress($plain_text);
@@ -123,17 +123,17 @@ class PHP_Crypt
     {
         //입력된 값이 사용 가능한 openssl method 체크
         $methods_check = $this->openssl_methods_check($method);
-        if( $methods_check === false ) { return false; }
+        if( $methods_check === false ) { $method = self::DEFAULT_METHOD; }
         unset($methods_check);
 
         //입력된 값이 사용 가능한 hash algo 체크
         $hash_check = $this->hash_algo_check($hash);
-        if( $hash_check === false ) { return false; }
+        if( $hash_check === false ) { $hash = self::DEFAULT_HASH; }
         unset($hash_check);
 
         //값 체크
         if ( empty($cipher_text) ) { return false;  }
-        if ( empty($password) ) { return false;  }
+        if ( empty($password) ) { $password = self::DEFAULT_PASSWORD;  }
 
         $cipher_text = @base64_decode($cipher_text);
         if ( !$cipher_text ) return false;
@@ -150,7 +150,9 @@ class PHP_Crypt
 
         //HMAC를 사용하여 위변조 여부를 체크한다.
         $hmac_check = hash_hmac($hash, $cipher_data, $password, true);
-        if ( $hash_hmac !== $hmac_check ) return false;
+        if ( hash_equals($hash_hmac,$hmac_check) === false ) return false;
+        unset($hmac_check);
+        unset($hash_hmac);
 
         //openssl_decrypt 복호화
         $plain_text = @openssl_decrypt($cipher_data, $method, $password, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $iv, $tag);
