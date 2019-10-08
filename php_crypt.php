@@ -7,7 +7,6 @@ PHP에 mcrypt 모듈은 버전 PHP 7부터 보안성의 문재로 더 이상 지
 보안을 위해 openssl을 사용해야한다.
 hash_hmac을 사용해 문자열을 암호화하고 위변조를 방지하는 방법
 
-
 주의사항
 1. 비밀번호는 반드시 서버만 알고 있어야 한다. 
 2. 비밀번호는 절대 클라이언트에게 전송해서는 안된다.
@@ -21,10 +20,10 @@ class PHP_Crypt
 {
     //기본 설정 부여
     const DEFAULT_HASH = 'sha256'; //사용할 기본 hash 값을 넣어준다. hash_algos() 에서 확인
-    const DEFAULT_METHOD =  'aes-256-cbc'; //사용할 기본 openssl method 값을 넣어준다. openssl_get_cipher_methods() 에서 확인
+    const DEFAULT_METHOD =  'aes-256-gcm'; //사용할 기본 openssl method 값을 넣어준다. openssl_get_cipher_methods() 에서 확인
     const DEFAULT_PASSWORD = '<|비밀번호|PASSWORD|秘密番號|パスワード|पासवर्ड|Mật khẩu|>'; //기본 비밀번호 설정 (경우에 따라 변경)
     
-    //시작 전  DEFAUL 초기값 확인 후 사용 하시기 바랍니다.
+    //시작 전  DEFAUL 초기값 확인 후 사용 하시기 바랍니다. 
     public function __construct() 
     {
         if( $this->openssl_methods_check(self::DEFAULT_METHOD) === false ) { exit('"DEFAULT_METHOD" Value Error : "'.self::DEFAULT_METHOD.'" is not found or not supported'); }
@@ -36,6 +35,7 @@ class PHP_Crypt
     private function openssl_methods_check($method)
     {
         $method_list = @openssl_get_cipher_methods();
+
         if ( function_exists('openssl_encrypt') and function_exists('openssl_decrypt') ){
             return (Bool) in_array($method, $method_list);
         } else {
@@ -47,6 +47,7 @@ class PHP_Crypt
     private function hash_algo_check($hash_algo)
     {
         $hash_algo_list = @hash_algos();
+
         if ( function_exists('hash') ) {
             return (Bool) in_array($hash_algo, $hash_algo_list);
         } else {
@@ -55,7 +56,7 @@ class PHP_Crypt
     }
 
     //자료값 압축
-    public function data_compress($data) 
+    public function data_compress($data)
     {
         if ( empty($data) ) { return (Bool) false; }
         if ( function_exists('json_encode') and function_exists('gzdeflate') ) {
@@ -95,7 +96,7 @@ class PHP_Crypt
 
         //값 체크
         if ( empty($plain_text) ) { return false;  }
-        if ( empty($password) ) { $password = self::DEFAULT_PASSWORD;  }
+        if ( empty($password) ) { $password = self::DEFAULT_PASSWORD; }
 
         //용량 절감을 위해 입력값을 압축한다.
         $plain_text = $this->data_compress($plain_text);
@@ -133,7 +134,7 @@ class PHP_Crypt
 
         //값 체크
         if ( empty($cipher_text) ) { return false;  }
-        if ( empty($password) ) { $password = self::DEFAULT_PASSWORD;  }
+        if ( empty($password) ) { $password = self::DEFAULT_PASSWORD; }
 
         $cipher_text = @base64_decode($cipher_text);
         if ( !$cipher_text ) return false;
@@ -166,4 +167,3 @@ class PHP_Crypt
         return $plain_text;
     }
 }
-
