@@ -75,8 +75,7 @@ class PHP_Crypt
             $compress_data = base64_decode($compress_data);
             $result = json_decode(@gzinflate($compress_data), true);
             return ($result);
-        
-        } else {json_decode($data, true);
+        } else {
             return (Bool) false;
         }
     }
