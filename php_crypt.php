@@ -19,8 +19,8 @@ hash_hmac을 사용해 문자열을 암호화하고 위변조를 방지하는 �
 class PHP_Crypt
 {
     //기본 설정 부여
-    const DEFAULT_HASH = 'sha256'; //사용할 기본 hash 값을 넣어준다. hash_algos() 에서 확인
-    const DEFAULT_METHOD =  'aes-256-gcm'; //사용할 기본 openssl method 값을 넣어준다. openssl_get_cipher_methods() 에서 확인
+    const DEFAULT_HASH = 'sha256'; //사용할 기본 hash 값을 넣어준다.
+    const DEFAULT_METHOD =  'aes-256-gcm'; //사용할 기본 openssl method 값을 넣어준다.
     const DEFAULT_PASSWORD = '<|비밀번호|PASSWORD|秘密番號|パスワード|पासवर्ड|Mật khẩu|>'; //기본 비밀번호 설정 (경우에 따라 변경)
     
     //시작 전  DEFAUL 초기값 확인 후 사용 하시기 바랍니다. 
@@ -34,24 +34,26 @@ class PHP_Crypt
     //사용 가능한 openssl method 체크
     private function openssl_methods_check($method)
     {
-        $method_list = @openssl_get_cipher_methods();
+        if ( !is_string($method) ) { return (Bool) false; }
 
         if ( function_exists('openssl_encrypt') and function_exists('openssl_decrypt') ){
+            $method_list = @openssl_get_cipher_methods();
             return (Bool) in_array($method, $method_list);
         } else {
-            return (Bool) false;
+            return (Bool) false; //지원하지 않는 방식
         }
     }
 
     //사용 가능한 hash algo 체크
     private function hash_algo_check($hash_algo)
     {
-        $hash_algo_list = @hash_algos();
+        if ( !is_string($hash_algo) ) { return (Bool) false; }
 
         if ( function_exists('hash') ) {
+            $hash_algo_list = @hash_algos();
             return (Bool) in_array($hash_algo, $hash_algo_list);
         } else {
-            return (Bool) false;
+            return (Bool) false; //지원하지 않는 방식
         }
     }
 
@@ -102,6 +104,7 @@ class PHP_Crypt
         if ( !$plain_text ) { return false; }
 
         $password = hash($hash, $password, true);
+        if ( !$password ) { return false; }
 
         $iv_size = openssl_cipher_iv_length($method);
         $iv = openssl_random_pseudo_bytes($iv_size);
@@ -139,14 +142,12 @@ class PHP_Crypt
         if ( !$cipher_text ) return false;
 
         $cipher_explode = explode('$::',$cipher_text);
-        if ( is_array($cipher_explode) == false or count($cipher_explode) !== 4 ) return false;
-        $iv = $cipher_explode[0];
-        $hash_hmac = $cipher_explode[1];
-        $cipher_data = $cipher_explode[2];
-        $tag = $cipher_explode[3];
+        if ( is_array($cipher_explode) == false ) return false;
+        list($iv,$hash_hmac,$cipher_data,$tag) = $cipher_explode;
         unset($cipher_explode);
 
         $password = hash($hash, $password, true);
+        if ( !$password ) { return false; }
 
         //HMAC를 사용하여 위변조 여부를 체크한다.
         $hmac_check = hash_hmac($hash, $cipher_data, $password, true);
